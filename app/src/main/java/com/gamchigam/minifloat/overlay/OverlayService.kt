@@ -12,12 +12,12 @@ import com.gamchigam.minifloat.R
 
 class OverlayService : Service() {
 
-    private lateinit var overlayManager: OverlayManager
-
     companion object {
         private const val CHANNEL_ID = "minifloat_overlay"
         private const val NOTIFICATION_ID = 1001
     }
+
+    private lateinit var overlayManager: OverlayManager
 
     override fun onCreate() {
         super.onCreate()
@@ -51,10 +51,10 @@ class OverlayService : Service() {
                 CHANNEL_ID,
                 "MiniFloat",
                 NotificationManager.IMPORTANCE_LOW
-            ).apply {
-                description = "MiniFloat 플로팅 버튼 서비스"
-                setShowBadge(false)
-            }
+            )
+
+            channel.description = "MiniFloat 플로팅 버튼 서비스"
+            channel.setShowBadge(false)
 
             val manager =
                 getSystemService(NotificationManager::class.java)
