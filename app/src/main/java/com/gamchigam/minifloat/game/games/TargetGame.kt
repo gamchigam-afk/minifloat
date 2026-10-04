@@ -1,5 +1,6 @@
 package com.gamchigam.minifloat.game.games
 
+import com.gamchigam.minifloat.game.MiniGame
 import com.gamchigam.minifloat.game.GameResult
 import kotlin.math.abs
 
