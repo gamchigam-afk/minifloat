@@ -7,8 +7,10 @@ import android.view.Gravity
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import com.gamchigam.minifloat.data.SaveManager
 import com.gamchigam.minifloat.game.GameResult
 import com.gamchigam.minifloat.game.MiniGame
+import com.gamchigam.minifloat.game.games.DodgeGame
 import com.gamchigam.minifloat.game.games.MemoryGame
 import com.gamchigam.minifloat.game.games.NumberOrderGame
 import com.gamchigam.minifloat.game.games.RandomButtonGame
@@ -16,7 +18,6 @@ import com.gamchigam.minifloat.game.games.ReactionGame
 import com.gamchigam.minifloat.game.games.TapRushGame
 import com.gamchigam.minifloat.game.games.TargetGame
 import com.gamchigam.minifloat.game.games.TimingGame
-import com.gamchigam.minifloat.game.games.DodgeGame
 import java.util.Timer
 import java.util.TimerTask
 
@@ -26,6 +27,8 @@ class GamePlayView(
     private val onFinish: () -> Unit,
     private val onBack: () -> Unit
 ) : LinearLayout(context) {
+
+    private val saveManager = SaveManager(context)
 
     private val content = LinearLayout(context)
     private val title = TextView(context)
@@ -64,6 +67,7 @@ class GamePlayView(
 
         val backButton = Button(context).apply {
             text = "게임 선택으로"
+
             setOnClickListener {
                 stopTimer()
                 onBack()
@@ -80,6 +84,7 @@ class GamePlayView(
     }
 
     fun startGame() {
+        stopTimer()
         content.removeAllViews()
 
         when (game) {
@@ -119,7 +124,7 @@ class GamePlayView(
                 }
             }
         }, 1500)
-        
+
         button.setOnClickListener {
             game.react()
             finishGame(game.finish())
@@ -145,6 +150,7 @@ class GamePlayView(
         }
 
         timer = Timer()
+
         timer?.schedule(object : TimerTask() {
             override fun run() {
                 post {
@@ -183,6 +189,7 @@ class GamePlayView(
         }
 
         timer = Timer()
+
         timer?.schedule(object : TimerTask() {
             override fun run() {
                 post {
@@ -233,9 +240,9 @@ class GamePlayView(
                     setOnClickListener {
                         val correct = game.input(number)
 
-                        if (!correct) {
-                            finishGame(game.finish())
-                        } else if (game.getProgress() >= sequence.size) {
+                        if (!correct ||
+                            game.getProgress() >= sequence.size
+                        ) {
                             finishGame(game.finish())
                         }
                     }
@@ -289,15 +296,20 @@ class GamePlayView(
         }
 
         timer = Timer()
-        timer?.scheduleAtFixedRate(object : TimerTask() {
-            override fun run() {
-                post {
-                    game.update()
-                    status.text =
-                        "생존 시간: ${game.getSurvivedTime() / 1000.0}s"
+
+        timer?.scheduleAtFixedRate(
+            object : TimerTask() {
+                override fun run() {
+                    post {
+                        game.update()
+                        status.text =
+                            "생존 시간: ${game.getSurvivedTime() / 1000.0}s"
+                    }
                 }
-            }
-        }, 0, 100)
+            },
+            0,
+            100
+        )
     }
 
     private fun setupNumberOrder(game: NumberOrderGame) {
@@ -323,7 +335,9 @@ class GamePlayView(
                 setOnClickListener {
                     val correct = game.press(number)
 
-                    if (!correct || game.getCorrectCount() >= 9) {
+                    if (!correct ||
+                        game.getCorrectCount() >= 9
+                    ) {
                         finishGame(game.finish())
                     }
                 }
@@ -360,19 +374,14 @@ class GamePlayView(
                 text = "버튼 ${index + 1}"
 
                 setOnClickListener {
-                    val finishedBefore =
-                        game.getAttempts() >= RandomButtonGame.MAX_ROUNDS
-
                     game.press(index)
 
-                    if (
-                        finishedBefore ||
-                        game.getAttempts() >= RandomButtonGame.MAX_ROUNDS
-                    ) {
+                    info.text =
+                        "정답을 찾아 누르세요.\n" +
+                        "시도 ${game.getAttempts()}/${RandomButtonGame.MAX_ROUNDS}"
+
+                    if (game.getAttempts() >= RandomButtonGame.MAX_ROUNDS) {
                         finishGame(game.finish())
-                    } else {
-                        info.text =
-                            "정답을 찾아 누르세요.\n시도 ${game.getAttempts()}/${RandomButtonGame.MAX_ROUNDS}"
                     }
                 }
             }
@@ -394,21 +403,28 @@ class GamePlayView(
         )
     }
 
-    private fun makeText(text: String): TextView {
-        return TextView(context).apply {
-            this.text = text
-            textSize = 17f
-            setTextColor(Color.WHITE)
-            gravity = Gravity.CENTER
-        }
-    }
-
     private fun finishGame(result: GameResult) {
         stopTimer()
 
+        val oldBest = saveManager.getBestScore(result.gameId)
+        val isNewBest = result.score > oldBest
+
+        if (isNewBest) {
+            saveManager.saveBestScore(
+                result.gameId,
+                result.score
+            )
+        }
+
+        saveManager.addCoins(result.coins)
+
+        val finalResult = result.copy(
+            isNewBest = isNewBest
+        )
+
         val resultView = ResultView(
             context = context,
-            result = result,
+            result = finalResult,
             onRetry = {
                 startGame()
             },
@@ -417,14 +433,24 @@ class GamePlayView(
             }
         )
 
-        removeAllViews()
-        addView(
+        content.removeAllViews()
+
+        content.addView(
             resultView,
             LayoutParams(
                 LayoutParams.MATCH_PARENT,
                 LayoutParams.MATCH_PARENT
             )
         )
+    }
+
+    private fun makeText(text: String): TextView {
+        return TextView(context).apply {
+            this.text = text
+            textSize = 17f
+            setTextColor(Color.WHITE)
+            gravity = Gravity.CENTER
+        }
     }
 
     private fun stopTimer() {
