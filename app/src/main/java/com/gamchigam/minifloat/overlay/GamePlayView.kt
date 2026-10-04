@@ -1,5 +1,6 @@
 package com.gamchigam.minifloat.overlay
 
+import com.gamchigam.minifloat.ui.ResultView
 import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
