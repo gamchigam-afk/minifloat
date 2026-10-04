@@ -1,6 +1,7 @@
 package com.gamchigam.minifloat.game.games
 
 import com.gamchigam.minifloat.game.GameResult
+import com.gamchigam.minifloat.game.MiniGame
 
 class TapRushGame : MiniGame {
 
