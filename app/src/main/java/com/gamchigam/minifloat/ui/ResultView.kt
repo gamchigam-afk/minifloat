@@ -27,7 +27,12 @@ class ResultView(
         }
 
         val title = TextView(context).apply {
-            text = if (result.isNewBest) "🏆 신기록!" else "게임 종료"
+            text = if (result.isNewBest) {
+                "🏆 신기록!"
+            } else {
+                "게임 종료"
+            }
+
             textSize = 26f
             setTextColor(Color.WHITE)
             gravity = Gravity.CENTER
@@ -55,6 +60,7 @@ class ResultView(
 
         val retryButton = Button(context).apply {
             text = "다시 하기"
+
             setOnClickListener {
                 onRetry()
             }
@@ -64,6 +70,7 @@ class ResultView(
 
         val closeButton = Button(context).apply {
             text = "게임 선택으로"
+
             setOnClickListener {
                 onClose()
             }
