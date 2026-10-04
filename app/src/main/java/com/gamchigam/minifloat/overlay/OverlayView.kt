@@ -7,11 +7,16 @@ import android.view.Gravity
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import com.gamchigam.minifloat.game.GameManager
+import com.gamchigam.minifloat.game.MiniGame
 
 class OverlayView(
     context: Context,
-    private val onClose: () -> Unit
+    private val onClose: () -> Unit,
+    private val onGameSelected: (MiniGame) -> Unit
 ) : LinearLayout(context) {
+
+    private val gameManager = GameManager()
 
     init {
         orientation = VERTICAL
@@ -40,7 +45,7 @@ class OverlayView(
             title,
             LayoutParams(
                 LayoutParams.MATCH_PARENT,
-                60.dp()
+                55.dp()
             )
         )
 
@@ -55,38 +60,27 @@ class OverlayView(
             subtitle,
             LayoutParams(
                 LayoutParams.MATCH_PARENT,
-                40.dp()
+                35.dp()
             )
         )
     }
 
     private fun addGameButtons() {
-        val games = listOf(
-            "⚡ Reaction",
-            "👆 Tap Rush",
-            "🎯 Target",
-            "🧠 Memory",
-            "⏱ Timing",
-            "💨 Dodge",
-            "🔢 Number Order",
-            "🎲 Random Button"
-        )
-
-        games.forEach { gameName ->
+        gameManager.getGames().forEach { game ->
             val button = Button(context).apply {
-                text = gameName
-                textSize = 15f
-                setTextColor(Color.WHITE)
+                text = game.name
+                textSize = 14f
+
                 setOnClickListener {
-                    // 게임 선택 기능은 GameManager 구현 후 연결
+                    onGameSelected(game)
                 }
             }
 
             val params = LayoutParams(
                 LayoutParams.MATCH_PARENT,
-                46.dp()
+                42.dp()
             ).apply {
-                setMargins(0, 4.dp(), 0, 4.dp())
+                setMargins(0, 3.dp(), 0, 3.dp())
             }
 
             addView(button, params)
@@ -96,6 +90,7 @@ class OverlayView(
     private fun addCloseButton() {
         val button = Button(context).apply {
             text = "닫기"
+
             setOnClickListener {
                 onClose()
             }
@@ -105,7 +100,7 @@ class OverlayView(
             LayoutParams.MATCH_PARENT,
             48.dp()
         ).apply {
-            topMargin = 12.dp()
+            topMargin = 10.dp()
         }
 
         addView(button, params)
