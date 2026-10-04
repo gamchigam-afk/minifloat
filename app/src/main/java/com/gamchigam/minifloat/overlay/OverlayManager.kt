@@ -104,7 +104,7 @@ class OverlayManager(
             320.dp(),
             520.dp(),
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+            0,
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.CENTER
@@ -113,7 +113,6 @@ class OverlayManager(
         windowManager.addView(view, params)
         gameView = view
 
-        game.start()
         view.startGame()
     }
 
